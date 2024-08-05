@@ -9,6 +9,12 @@ export async function GET() {
 try {
     const areas = await prisma.areas.findMany({
     include: {
+      Programas:{
+        select:{
+          sigla:true,
+          
+        }
+      }
 
     },
     });

@@ -269,7 +269,7 @@ export function FichaTemplate() {
                     <td>{ficha.inicio_fecha.slice(0, 10)}</td>
                     <td>{ficha.fin_lectiva.slice(0, 10)}</td>
                     <td>{ficha.fin_ficha.slice(0, 10)}</td>
-                    <td>{ficha.Programas.sigla}</td> {/* Asegúrate de que esto sea correcto */}
+                    <td>{ficha.Programas.nombre_programa}</td> {/* Asegúrate de que esto sea correcto */}
                     <td>{ficha.sede}</td>
                     <td>{ficha.estado}</td>
                     <td>

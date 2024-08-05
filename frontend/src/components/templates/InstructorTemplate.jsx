@@ -287,15 +287,7 @@ function PersonaForm({ persona, onSave, onCancel }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSave({
-      ...persona,
-      nombres,
-      correo,
-      telefono,
-      rol,
-      cargo,
-      municipio,
-    });
+    onSave({ ...persona, nombres, correo, telefono, rol, cargo, municipio });
   };
 
   return (
@@ -358,55 +350,87 @@ function PersonaForm({ persona, onSave, onCancel }) {
   );
 }
 
-// Styled-components
+// Estilos con styled-components
 const Container = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
   padding: 20px;
-  background-color: #e6f0ff;
+  background-color: #f0f8ff;
 `;
 
 const Content = styled.div`
-  max-width: 1200px;
-  margin: 0 auto;
+  max-width: 1000px;
+  width: 100%;
   background-color: #fff;
   padding: 20px;
-  border-radius: 10px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
 `;
 
 const Title = styled.h1`
-  color: #4682b4;
+  text-align: center;
+  color: #4169e1;
+`;
+
+const ButtonGroup = styled.div`
+  display: flex;
+  gap: 10px;
+  justify-content: center;
   margin-bottom: 20px;
 `;
 
+const Button = styled.button`
+  background-color: ${(props) => (props.danger ? "#dc3545" : "#007bff")};
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+
+  &:hover {
+    background-color: ${(props) => (props.danger ? "#c82333" : "#0056b3")};
+  }
+`;
+
 const SectionTitle = styled.h2`
-  color: #4169e1;
-  margin-bottom: 15px;
+  margin: 20px 0;
+  color: #4682b4;
 `;
 
 const Table = styled.table`
   width: 100%;
   border-collapse: collapse;
+  margin-bottom: 20px;
 `;
 
 const TableHead = styled.thead`
-  background-color: #4682b4;
-  color: #fff;
+  background-color: #4169e1;
 `;
 
 const TableRow = styled.tr`
-  border-bottom: 1px solid #ddd;
+  &:nth-child(even) {
+    background-color: #e6f0ff;
+  }
+
+  &:hover {
+    background-color: #f1f1f1;
+  }
 `;
 
 const TableHeader = styled.th`
   padding: 10px;
+  color: white;
   text-align: left;
+  border-bottom: 2px solid #ddd;
 `;
 
 const TableBody = styled.tbody``;
 
 const TableCell = styled.td`
   padding: 10px;
-  text-align: left;
+  border-bottom: 1px solid #ddd;
 `;
 
 const FormContainer = styled.div`
@@ -414,48 +438,26 @@ const FormContainer = styled.div`
 `;
 
 const Form = styled.form`
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
   background-color: #f0f8ff;
   padding: 20px;
-  border-radius: 10px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
 `;
 
 const FormGroup = styled.div`
-  margin-bottom: 15px;
+  display: flex;
+  flex-direction: column;
 `;
 
 const Label = styled.label`
-  display: block;
-  margin-bottom: 5px;
   color: #4682b4;
 `;
 
 const Input = styled.input`
-  width: 100%;
   padding: 8px;
   border: 1px solid #b0c4de;
-  border-radius: 5px;
+  border-radius: 4px;
 `;
-
-const ButtonGroup = styled.div`
-  margin-top: 20px;
-`;
-
-const Button = styled.button`
-  background-color: ${(props) =>
-    props.danger ? "#ff4d4d" : "#4169e1"};
-  color: #fff;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 16px;
-  margin-right: 10px;
-
-  &:hover {
-    background-color: ${(props) =>
-      props.danger ? "#e60000" : "#3742fa"};
-  }
-`;
-
-export default InstructorTemplate;
