@@ -1,44 +1,8 @@
 import styled from "styled-components";
 import { FaCalendarAlt, FaRegClock, FaRegCalendarCheck } from "react-icons/fa";
 import senaLogo from '../../assets/sena.png'; // Importa la imagen correctamente
-import { useState, useEffect } from 'react';
 
 export function HomeTemplate() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [token, setToken] = useState(null);
-  const [error, setError] = useState('');
-  const [showLoginForm, setShowLoginForm] = useState(false);
-
-  const handleLogin = async (event) => {
-    event.preventDefault();
-    try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        setToken(data.token);
-        setError('');
-        localStorage.setItem('authToken', data.token);
-      } else {
-        setError(data.message);
-      }
-    } catch (err) {
-      setError('Error al iniciar sesión');
-    }
-  };
-
-  const toggleLoginForm = () => {
-    setShowLoginForm(!showLoginForm);
-  };
-
   return (
     <Container>
       <Overlay>
@@ -53,30 +17,6 @@ export function HomeTemplate() {
           <Description>
             Explora nuestra herramienta para gestionar tus eventos y tareas de forma intuitiva. Mantén tus planes organizados y al alcance de tu mano.
           </Description>
-          <Button onClick={toggleLoginForm}>
-            {showLoginForm ? 'Ocultar Formulario' : 'Iniciar Sesión'}
-          </Button>
-          {showLoginForm && (
-            <LoginForm onSubmit={handleLogin}>
-              <LoginTitle>Iniciar Sesión</LoginTitle>
-              <LoginInput
-                type="email"
-                placeholder="Correo electrónico"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-              <LoginInput
-                type="password"
-                placeholder="Contraseña"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-              <LoginButton type="submit">Iniciar sesión</LoginButton>
-              {error && <Error>{error}</Error>}
-            </LoginForm>
-          )}
           <Features>
             <Feature>
               <Icon><FaCalendarAlt /></Icon>
@@ -183,24 +123,6 @@ const Description = styled.p`
   margin: 0 auto;
 `;
 
-const Button = styled.button`
-  padding: 15px 35px;
-  font-size: 1.1em;
-  color: #fff;
-  background-color: ${({ theme }) => theme.primary};
-  border: none;
-  border-radius: 30px;
-  cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
-  margin-bottom: 40px;
-
-  &:hover {
-    background-color: ${({ theme }) => theme.primaryHover};
-    transform: scale(1.05);
-    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
-  }
-`;
-
 const Features = styled.div`
   display: flex;
   justify-content: space-around;
@@ -256,54 +178,4 @@ const FooterText = styled.p`
   font-size: 0.9em;
   color: ${({ theme }) => theme.textLight};
   margin: 0;
-`;
-
-// Estilos para el formulario de inicio de sesión
-const LoginForm = styled.form`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-top: 30px;
-`;
-
-const LoginTitle = styled.h2`
-  font-size: 1.5em;
-  margin-bottom: 20px;
-  color: ${({ theme }) => theme.primary};
-`;
-
-const LoginInput = styled.input`
-  padding: 10px;
-  margin: 10px 0;
-  width: 300px;
-  border: 1px solid ${({ theme }) => theme.border};
-  border-radius: 5px;
-  font-size: 1em;
-  outline: none;
-
-  &:focus {
-    border-color: ${({ theme }) => theme.primary};
-  }
-`;
-
-const LoginButton = styled.button`
-  padding: 10px 20px;
-  font-size: 1.1em;
-  color: #fff;
-  background-color: ${({ theme }) => theme.primary};
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
-
-  &:hover {
-    background-color: ${({ theme }) => theme.primaryHover};
-    transform: scale(1.05);
-    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
-  }
-`;
-
-const Error = styled.div`
-  color: red;
-  margin-top: 10px;
 `;

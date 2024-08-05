@@ -50,7 +50,7 @@ export function FichaTemplate() {
   useEffect(() => {
     const fetchSelectData = async () => {
       try {
-        const programasRes = await axiosCliente.get("/programas");
+        const programasRes = await axiosCliente.get("/progrmas");
         setProgramas(programasRes.data.datos);
       } catch (error) {
         console.error("Error al cargar los datos para selects:", error);

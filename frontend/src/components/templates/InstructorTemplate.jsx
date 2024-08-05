@@ -24,7 +24,7 @@ export function InstructorTemplate() {
 
     const fetchPersonas = async () => {
       try {
-        const response = await fetch("/api/personas");
+        const response = await fetch("/personas");
         const data = await response.json();
         setPersonas(data);
       } catch (error) {
@@ -51,7 +51,7 @@ export function InstructorTemplate() {
   // Manejar eliminar ficha
   const handleDeleteFicha = async (fichaId) => {
     try {
-      await fetch(`/api/fichas/${fichaId}`, { method: "DELETE" });
+      await fetch(`/fichas/${fichaId}`, { method: "DELETE" });
       setFichas(fichas.filter((ficha) => ficha.id !== fichaId));
     } catch (error) {
       console.error("Error al eliminar ficha:", error);
@@ -62,7 +62,7 @@ export function InstructorTemplate() {
   const handleSaveFicha = async (ficha) => {
     if (selectedFicha) {
       try {
-        const response = await fetch(`/api/fichas/${ficha.id}`, {
+        const response = await fetch(`/fichas/${ficha.id}`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
@@ -78,7 +78,7 @@ export function InstructorTemplate() {
       }
     } else {
       try {
-        const response = await fetch("/api/fichas", {
+        const response = await fetch("/fichas", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -109,7 +109,7 @@ export function InstructorTemplate() {
   // Manejar eliminar persona
   const handleDeletePersona = async (personaId) => {
     try {
-      await fetch(`/api/personas/${personaId}`, { method: "DELETE" });
+      await fetch(`/personas/${personaId}`, { method: "DELETE" });
       setPersonas(personas.filter((persona) => persona.id_persona !== personaId));
     } catch (error) {
       console.error("Error al eliminar persona:", error);
@@ -120,7 +120,7 @@ export function InstructorTemplate() {
   const handleSavePersona = async (persona) => {
     if (selectedPersona) {
       try {
-        const response = await fetch(`/api/personas/${persona.id_persona}`, {
+        const response = await fetch(`/personas/${persona.id_persona}`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
@@ -138,7 +138,7 @@ export function InstructorTemplate() {
       }
     } else {
       try {
-        const response = await fetch("/api/personas", {
+        const response = await fetch("/personas", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
