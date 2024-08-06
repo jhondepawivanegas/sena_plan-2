@@ -1,7 +1,5 @@
 import styled from "styled-components";
 import { useState, useEffect } from "react";
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTrashAlt, faEdit } from '@fortawesome/free-solid-svg-icons';
 import axiosCliente from "../axioCliente.js";
 
 const daysOfWeek = [
@@ -17,9 +15,11 @@ export function HorariosTemplate() {
   const [selectedDay, setSelectedDay] = useState('');
   const [selectedStartTime, setSelectedStartTime] = useState('');
   const [selectedEndTime, setSelectedEndTime] = useState('');
-  const [selectedDate, setSelectedDate] = useState('');
+  const [selectedStartDate, setSelectedStartDate] = useState('');
+  const [selectedEndDate, setSelectedEndDate] = useState('');
   const [editIndex, setEditIndex] = useState(null);
   const [error, setError] = useState('');
+  const [calculatedHours, setCalculatedHours] = useState(''); // Estado para las horas calculadas
 
   useEffect(() => {
     // Cargar instructores y ambientes desde la API
@@ -38,8 +38,36 @@ export function HorariosTemplate() {
     fetchInitialData();
   }, []);
 
+  const calculateHours = (startTime, endTime) => {
+    const [startHour, startMinute] = startTime.split(':').map(Number);
+    const [endHour, endMinute] = endTime.split(':').map(Number);
+
+    const start = new Date();
+    start.setHours(startHour, startMinute);
+
+    const end = new Date();
+    end.setHours(endHour, endMinute);
+
+    const diff = (end - start) / (1000 * 60 * 60); // Diferencia en horas
+
+    return diff.toFixed(2);
+  };
+
+  const handleTimeChange = () => {
+    if (selectedStartTime && selectedEndTime) {
+      const hours = calculateHours(selectedStartTime, selectedEndTime);
+      setCalculatedHours(hours);
+    } else {
+      setCalculatedHours('');
+    }
+  };
+
+  useEffect(() => {
+    handleTimeChange();
+  }, [selectedStartTime, selectedEndTime]);
+
   const handleAddSchedule = async () => {
-    if (!selectedInstructor || !selectedRoom || !selectedDay || !selectedStartTime || !selectedEndTime || !selectedDate) {
+    if (!selectedInstructor || !selectedRoom || !selectedDay || !selectedStartTime || !selectedEndTime || !selectedStartDate || !selectedEndDate) {
       setError("Por favor, complete todos los campos.");
       return;
     }
@@ -50,7 +78,9 @@ export function HorariosTemplate() {
       day: selectedDay,
       start_time: selectedStartTime,
       end_time: selectedEndTime,
-      date: selectedDate,
+      start_date: selectedStartDate,
+      end_date: selectedEndDate,
+      hours: calculatedHours, // Añadir horas calculadas
     };
 
     try {
@@ -89,7 +119,9 @@ export function HorariosTemplate() {
     setSelectedDay(item.day);
     setSelectedStartTime(item.start_time);
     setSelectedEndTime(item.end_time);
-    setSelectedDate(item.date);
+    setSelectedStartDate(item.start_date);
+    setSelectedEndDate(item.end_date);
+    setCalculatedHours(item.hours); // Establecer horas calculadas
     setEditIndex(index);
   };
 
@@ -121,9 +153,11 @@ export function HorariosTemplate() {
             </option>
           ))}
         </Select>
+        <Input type="date" onChange={(e) => setSelectedStartDate(e.target.value)} value={selectedStartDate} />
         <Input type="time" onChange={(e) => setSelectedStartTime(e.target.value)} value={selectedStartTime} />
+        <Input type="date" onChange={(e) => setSelectedEndDate(e.target.value)} value={selectedEndDate} />
         <Input type="time" onChange={(e) => setSelectedEndTime(e.target.value)} value={selectedEndTime} />
-        <Input type="date" onChange={(e) => setSelectedDate(e.target.value)} value={selectedDate} />
+        <Input type="text" value={calculatedHours} readOnly placeholder="Cantidad de Horas" /> {/* Mostrar horas calculadas */}
         <Button onClick={handleAddSchedule}>
           {editIndex !== null ? "Actualizar Horario" : "Añadir Horario"}
         </Button>
@@ -134,12 +168,11 @@ export function HorariosTemplate() {
           <TableRow>
             <TableHeaderCell>Instructor</TableHeaderCell>
             <TableHeaderCell>Ambiente</TableHeaderCell>
-            <TableHeaderCell>Fecha</TableHeaderCell>
-            <TableHeaderCell>Lunes</TableHeaderCell>
-            <TableHeaderCell>Martes</TableHeaderCell>
-            <TableHeaderCell>Miércoles</TableHeaderCell>
-            <TableHeaderCell>Jueves</TableHeaderCell>
-            <TableHeaderCell>Viernes</TableHeaderCell>
+            <TableHeaderCell>Fecha Inicio</TableHeaderCell>
+            <TableHeaderCell>Hora Inicio</TableHeaderCell>
+            <TableHeaderCell>Fecha Fin</TableHeaderCell>
+            <TableHeaderCell>Hora Fin</TableHeaderCell>
+            <TableHeaderCell>Horas</TableHeaderCell> {/* Nueva columna para horas */}
             <TableHeaderCell>Acciones</TableHeaderCell>
           </TableRow>
         </TableHeader>
@@ -147,13 +180,12 @@ export function HorariosTemplate() {
           {schedule.map((item, index) => (
             <TableRow key={index}>
               <TableCell>{instructors.find(instructor => instructor.id === item.instructor)?.nombres}</TableCell>
-              <TableCell>{rooms.find(room => room.id === item.room)?.nombre}</TableCell>
-              <TableCell>{item.date}</TableCell>
-              {daysOfWeek.map(day => (
-                <TableCell key={day}>
-                  {item.day === day ? `${item.start_time} - ${item.end_time}` : ''}
-                </TableCell>
-              ))}
+              <TableCell>{rooms.find(room => room.id === item.room)?.nombre_amb}</TableCell>
+              <TableCell>{item.start_date}</TableCell>
+              <TableCell>{item.start_time}</TableCell>
+              <TableCell>{item.end_date}</TableCell>
+              <TableCell>{item.end_time}</TableCell>
+              <TableCell>{item.hours}</TableCell> {/* Mostrar horas calculadas */}
               <TableCell>
                 <ButtonContainer>
                   <ActionButton onClick={() => handleRemoveSchedule(index)}>
