@@ -22,6 +22,7 @@ export async function GET() {
             programa: true, // Asegúrate de que este es el campo correcto que deseas mostrar
           },
         },
+        
         Ambientes: { // Incluir la relación con la tabla Ambientes
           select: {
             nombre_amb: true,

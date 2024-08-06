@@ -1,42 +1,23 @@
 import styled from "styled-components";
 import { useState, useEffect } from "react";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTrashAlt, faArrowLeft, faEdit } from '@fortawesome/free-solid-svg-icons';
+import { faTrashAlt, faEdit } from '@fortawesome/free-solid-svg-icons';
 import axiosCliente from "../axioCliente.js";
 
-
-
-const initialBlocks = [
-  { name: "Mañana", start: "07:00", end: "12:00" },
-  { name: "Tarde", start: "12:00", end: "17:00" },
-  { name: "Noche", start: "18:00", end: "22:00" },
-  { name: "Jornada Completa", start: "07:00", end: "22:00" },
-];
-
 const daysOfWeek = [
-  "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"
+  "Lunes", "Martes", "Miércoles", "Jueves", "Viernes"
 ];
-
-// Función para convertir la hora local a la hora de Colombia
-const convertToColombianTime = (time) => {
-  const localDate = new Date(`1970-01-01T${time}:00`);
-  const colombianOffset = -5 * 60; // Offset de Colombia en minutos
-  const localOffset = localDate.getTimezoneOffset();
-  const colombianDate = new Date(localDate.getTime() + (colombianOffset - localOffset) * 60000);
-  return colombianDate.toTimeString().substring(0, 5);
-};
 
 export function HorariosTemplate() {
   const [instructors, setInstructors] = useState([]);
   const [rooms, setRooms] = useState([]);
-  const [blocks, setBlocks] = useState(initialBlocks);
   const [schedule, setSchedule] = useState([]);
   const [selectedInstructor, setSelectedInstructor] = useState('');
   const [selectedRoom, setSelectedRoom] = useState('');
-  const [selectedBlock, setSelectedBlock] = useState('');
   const [selectedDay, setSelectedDay] = useState('');
-  const [startTime, setStartTime] = useState('');
-  const [endTime, setEndTime] = useState('');
+  const [selectedStartTime, setSelectedStartTime] = useState('');
+  const [selectedEndTime, setSelectedEndTime] = useState('');
+  const [selectedDate, setSelectedDate] = useState('');
   const [editIndex, setEditIndex] = useState(null);
   const [error, setError] = useState('');
 
@@ -49,7 +30,6 @@ export function HorariosTemplate() {
 
         const roomsResponse = await axiosCliente.get('/ambientes');
         setRooms(roomsResponse.data.datos);
-
       } catch (error) {
         setError('Error al cargar los datos iniciales.');
       }
@@ -58,41 +38,19 @@ export function HorariosTemplate() {
     fetchInitialData();
   }, []);
 
-  useEffect(() => {
-    if (selectedBlock) {
-      const block = blocks.find(b => b.name === selectedBlock);
-      if (block) {
-        setStartTime(block.start);
-        setEndTime(block.end);
-      }
-    }
-  }, [selectedBlock]);
-
   const handleAddSchedule = async () => {
-    if (!selectedInstructor || !selectedRoom || !selectedBlock || !startTime || !endTime || !selectedDay) {
+    if (!selectedInstructor || !selectedRoom || !selectedDay || !selectedStartTime || !selectedEndTime || !selectedDate) {
       setError("Por favor, complete todos los campos.");
-      return;
-    }
-
-    const block = blocks.find(b => b.name === selectedBlock);
-    if (!block) {
-      setError("Bloque seleccionado no encontrado.");
-      return;
-    }
-
-    if (startTime < block.start || endTime > block.end) {
-      setError(`El horario debe estar dentro del rango del bloque ${selectedBlock} (${block.start} - ${block.end}).`);
       return;
     }
 
     const newSchedule = {
       instructor: parseInt(selectedInstructor),
       room: parseInt(selectedRoom),
-      block: selectedBlock,
       day: selectedDay,
-      startTime,
-      endTime,
-      cantidad_horas: calculateHours(startTime, endTime),
+      start_time: selectedStartTime,
+      end_time: selectedEndTime,
+      date: selectedDate,
     };
 
     try {
@@ -108,34 +66,9 @@ export function HorariosTemplate() {
         setSchedule([...schedule, response.data]);
       }
 
-      setRooms(rooms.map(room =>
-        room.id === parseInt(selectedRoom) ? { ...room, occupied: true } : room
-      ));
       setError('');
     } catch (error) {
       setError('Error al agregar o actualizar el horario.');
-    }
-  };
-
-  const calculateHours = (start, end) => {
-    const startHour = parseInt(start.split(":")[0]);
-    const endHour = parseInt(end.split(":")[0]);
-    return endHour - startHour;
-  };
-
-  const handleVacateRoomEarly = (roomId) => {
-    const roomSchedules = schedule.filter(item => item.room === roomId);
-    const earliestSchedule = roomSchedules.reduce((earliest, current) =>
-      !earliest || new Date(current.startTime) < new Date(earliest.startTime)
-        ? current
-        : earliest
-    , null);
-
-    if (earliestSchedule) {
-      setRooms(rooms.map(room =>
-        room.id === roomId ? { ...room, occupied: false } : room
-      ));
-      setSchedule(schedule.filter(item => item !== earliestSchedule));
     }
   };
 
@@ -143,9 +76,6 @@ export function HorariosTemplate() {
     const item = schedule[index];
     try {
       await axiosCliente.delete(`/schedule/${item.id_horario}`);
-      setRooms(rooms.map(room =>
-        room.id === item.room ? { ...room, occupied: false } : room
-      ));
       setSchedule(schedule.filter((_, i) => i !== index));
     } catch (error) {
       setError('Error al eliminar el horario.');
@@ -156,10 +86,10 @@ export function HorariosTemplate() {
     const item = schedule[index];
     setSelectedInstructor(item.instructor.toString());
     setSelectedRoom(item.room.toString());
-    setSelectedBlock(item.block);
     setSelectedDay(item.day);
-    setStartTime(item.startTime);
-    setEndTime(item.endTime);
+    setSelectedStartTime(item.start_time);
+    setSelectedEndTime(item.end_time);
+    setSelectedDate(item.date);
     setEditIndex(index);
   };
 
@@ -178,16 +108,8 @@ export function HorariosTemplate() {
         <Select onChange={(e) => setSelectedRoom(e.target.value)} value={selectedRoom}>
           <option value="">Seleccionar Ambiente</option>
           {rooms.map((room) => (
-            <option key={room.id} value={room.id} disabled={room.occupied}>
-              {room.nombre_amb} {room.occupied ? "(Ocupado)" : ""}
-            </option>
-          ))}
-        </Select>
-        <Select onChange={(e) => setSelectedBlock(e.target.value)} value={selectedBlock}>
-          <option value="">Seleccionar Bloque</option>
-          {blocks.map((block, index) => (
-            <option key={index} value={block.name}>
-              {block.name} ({block.start} - {block.end})
+            <option key={room.id} value={room.id}>
+              {room.nombre_amb}
             </option>
           ))}
         </Select>
@@ -199,18 +121,9 @@ export function HorariosTemplate() {
             </option>
           ))}
         </Select>
-        <Input
-          type="time"
-          onChange={(e) => setStartTime(e.target.value)}
-          value={startTime}
-          placeholder="Hora de inicio"
-        />
-        <Input
-          type="time"
-          onChange={(e) => setEndTime(e.target.value)}
-          value={endTime}
-          placeholder="Hora de fin"
-        />
+        <Input type="time" onChange={(e) => setSelectedStartTime(e.target.value)} value={selectedStartTime} />
+        <Input type="time" onChange={(e) => setSelectedEndTime(e.target.value)} value={selectedEndTime} />
+        <Input type="date" onChange={(e) => setSelectedDate(e.target.value)} value={selectedDate} />
         <Button onClick={handleAddSchedule}>
           {editIndex !== null ? "Actualizar Horario" : "Añadir Horario"}
         </Button>
@@ -221,10 +134,12 @@ export function HorariosTemplate() {
           <TableRow>
             <TableHeaderCell>Instructor</TableHeaderCell>
             <TableHeaderCell>Ambiente</TableHeaderCell>
-            <TableHeaderCell>Bloque</TableHeaderCell>
-            <TableHeaderCell>Día</TableHeaderCell>
-            <TableHeaderCell>Hora de Inicio</TableHeaderCell>
-            <TableHeaderCell>Hora de Fin</TableHeaderCell>
+            <TableHeaderCell>Fecha</TableHeaderCell>
+            <TableHeaderCell>Lunes</TableHeaderCell>
+            <TableHeaderCell>Martes</TableHeaderCell>
+            <TableHeaderCell>Miércoles</TableHeaderCell>
+            <TableHeaderCell>Jueves</TableHeaderCell>
+            <TableHeaderCell>Viernes</TableHeaderCell>
             <TableHeaderCell>Acciones</TableHeaderCell>
           </TableRow>
         </TableHeader>
@@ -233,18 +148,17 @@ export function HorariosTemplate() {
             <TableRow key={index}>
               <TableCell>{instructors.find(instructor => instructor.id === item.instructor)?.nombres}</TableCell>
               <TableCell>{rooms.find(room => room.id === item.room)?.nombre}</TableCell>
-              <TableCell>{item.block}</TableCell>
-              <TableCell>{item.day}</TableCell>
-              <TableCell>{convertToColombianTime(item.startTime)}</TableCell>
-              <TableCell>{convertToColombianTime(item.endTime)}</TableCell>
+              <TableCell>{item.date}</TableCell>
+              {daysOfWeek.map(day => (
+                <TableCell key={day}>
+                  {item.day === day ? `${item.start_time} - ${item.end_time}` : ''}
+                </TableCell>
+              ))}
               <TableCell>
                 <ButtonContainer>
                   <ActionButton onClick={() => handleRemoveSchedule(index)}>
                     <FontAwesomeIcon icon={faTrashAlt} />
                   </ActionButton>
-                  <VacateButton onClick={() => handleVacateRoomEarly(item.room)}>
-                    <FontAwesomeIcon icon={faArrowLeft} />
-                  </VacateButton>
                   <UpdateButton onClick={() => handleEditSchedule(index)}>
                     <FontAwesomeIcon icon={faEdit} />
                   </UpdateButton>
@@ -333,30 +247,37 @@ const ScheduleTable = styled.table`
   margin-top: 20px;
   border-collapse: collapse;
   background: ${({ theme }) => theme.listBg};
-  padding: 20px;
   border-radius: 12px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 `;
 
 const TableHeader = styled.thead`
-  background-color: ${({ theme }) => theme.primary};
+  background: ${({ theme }) => theme.primary};
   color: #fff;
 `;
 
+const TableBody = styled.tbody`
+  & > tr:nth-child(even) {
+    background-color: ${({ theme }) => theme.secondaryBg};
+  }
+`;
+
 const TableRow = styled.tr`
+  height: 50px;
   border-bottom: 1px solid ${({ theme }) => theme.border};
 `;
 
-const TableHeaderCell = styled.th`
-  padding: 15px;
-  text-align: left;
+const TableCell = styled.td`
+  padding: 10px;
+  text-align: center;
+  border: 1px solid ${({ theme }) => theme.border};
 `;
 
-const TableBody = styled.tbody``;
-
-const TableCell = styled.td`
-  padding: 15px;
-  text-align: left;
+const TableHeaderCell = styled(TableCell)`
+  font-weight: bold;
+  background-color: ${({ theme }) => theme.primary};
+  color: #fff;
 `;
 
 const ActionButton = styled.button`
@@ -367,27 +288,10 @@ const ActionButton = styled.button`
   border: none;
   border-radius: 50%;
   cursor: pointer;
-  transition: background-color 0.3s ease;
   margin-right: 10px;
 
   &:hover {
-    background-color: #c0392b; /* Rojo oscuro */
-  }
-`;
-
-const VacateButton = styled.button`
-  padding: 10px;
-  font-size: 1.2rem;
-  color: #fff;
-  background-color: #3498db; /* Azul */
-  border: none;
-  border-radius: 50%;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-  margin-right: 10px;
-
-  &:hover {
-    background-color: #2980b9; /* Azul oscuro */
+    background-color: #c0392b;
   }
 `;
 
@@ -395,25 +299,24 @@ const UpdateButton = styled.button`
   padding: 10px;
   font-size: 1.2rem;
   color: #fff;
-  background-color: ${({ theme }) => theme.primary};
+  background-color: #f39c12; /* Naranja */
   border: none;
   border-radius: 50%;
   cursor: pointer;
-  transition: background-color 0.3s ease;
 
   &:hover {
-    background-color: ${({ theme }) => theme.primaryHover};
+    background-color: #e67e22;
   }
+`;
+
+const ButtonContainer = styled.div`
+  display: flex;
+  align-items: center;
 `;
 
 const Error = styled.div`
   color: ${({ theme }) => theme.error};
   margin-top: 10px;
-  font-size: 0.875rem;
 `;
 
-const ButtonContainer = styled.div`
-  display: flex;
-  gap: 10px; /* Espacio entre botones */
-  margin-top: 10px; /* Espacio superior */
-`;
+export default HorariosTemplate;
