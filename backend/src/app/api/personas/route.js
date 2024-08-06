@@ -22,23 +22,30 @@ export async function GET() {
 export async function POST(request) {
     try {
       const data = await request.json();
+      console.log('RESOPPPPPPPPPPP: ', data.identificacion);
+      
       const persona = await prisma.personas.create({
         data: {
-          identificacion: data.identificacion,
+          identificacion: Number(data.identificacion),
           nombres: data.nombres,
           correo: data.correo,
           telefono: data.telefono,
           password: data.password,
           rol: data.rol,
           cargo: data.cargo,
-          municipio: data.municipio,
+          municipio: Number(data.municipio),
         },
       });
+
+      
       return new NextResponse(JSON.stringify(persona), {
         headers: { "Content-Type": "application/json" },
         status: 201,
       });
-    } catch (error) {
+
+    } catch (error)
+     {
+
       return handleErrors(error);
     }
   }

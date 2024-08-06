@@ -19,6 +19,7 @@ export function UsuarioTemplate() {
   });
   const [modalOpen, setModalOpen] = useState(false);
   const [editarUsuario, setEditarUsuario] = useState(null);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     fetchUsuarios();
@@ -30,6 +31,7 @@ export function UsuarioTemplate() {
       const response = await axiosCliente.get('/personas');
       setUsuarios(response.data.datos);
     } catch (error) {
+      setError("Error al listar usuarios.");
       console.error("Error al listar Usuarios", error);
     }
   };
@@ -39,6 +41,7 @@ export function UsuarioTemplate() {
       const response = await axiosCliente.get('/municipios');
       setMunicipios(response.data.datos);
     } catch (error) {
+      setError("Error al listar municipios.");
       console.error("Error al listar Municipios", error);
     }
   };
@@ -65,6 +68,7 @@ export function UsuarioTemplate() {
       resetForm();
       setModalOpen(false);
     } catch (error) {
+      setError('Error al guardar usuario.');
       console.error("Error al guardar Usuario", error);
     }
   };
@@ -75,10 +79,10 @@ export function UsuarioTemplate() {
       nombres: usuario.nombres,
       correo: usuario.correo,
       telefono: usuario.telefono,
-      password: '',
+      password: '', // No editar la contraseña en el formulario
       rol: usuario.rol,
       cargo: usuario.cargo,
-      municipio: usuario.municipio
+      municipio: Number(usuario.municipio)
     });
     setEditarUsuario(usuario);
     setModalOpen(true);
@@ -89,6 +93,7 @@ export function UsuarioTemplate() {
       await axiosCliente.delete(`/personas/${id}`);
       fetchUsuarios();
     } catch (error) {
+      setError('Error al eliminar usuario.');
       console.error("Error al eliminar Usuario", error);
     }
   };
@@ -105,6 +110,7 @@ export function UsuarioTemplate() {
       municipio: ''
     });
     setEditarUsuario(null);
+    setError('');
   };
 
   return (
@@ -191,12 +197,13 @@ export function UsuarioTemplate() {
           >
             <option value="">Seleccionar Municipio</option>
             {municipios.map((municipio) => (
-              <option key={municipio.id} value={municipio.id}>
+              <option key={municipio.id_municipio} value={municipio.id_municipio}>
                 {municipio.nombre_mpio}
               </option>
             ))}
           </Select>
           <Button type="submit">{editarUsuario ? 'Actualizar Usuario' : 'Crear Usuario'}</Button>
+          {error && <Error>{error}</Error>}
         </Form>
       </Modal>
       <UserList>
@@ -225,7 +232,7 @@ export function UsuarioTemplate() {
                 <td>{usuario.telefono}</td>
                 <td>{usuario.rol}</td>
                 <td>{usuario.cargo}</td>
-                <td>{usuario.Municipios.nombre_mpio}</td>
+                <td>{municipios.find(municipio => municipio.id === usuario.municipio)?.nombre_mpio}</td>
                 <td>
                   <Button onClick={() => handleEdit(usuario)}>Editar</Button>
                   <Button onClick={() => handleDelete(usuario.id_persona)}>Eliminar</Button>
@@ -358,3 +365,9 @@ const CloseButton = styled.button`
   font-size: 24px;
   cursor: pointer;
 `;
+
+const Error = styled.div`
+  color: #e74c3c;
+  margin-top: 10px;
+`;
+

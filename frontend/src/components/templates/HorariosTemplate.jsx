@@ -20,6 +20,7 @@ export function HorariosTemplate() {
   const [editIndex, setEditIndex] = useState(null);
   const [error, setError] = useState('');
   const [calculatedHours, setCalculatedHours] = useState(''); // Estado para las horas calculadas
+  const [isModalOpen, setIsModalOpen] = useState(false); // Estado para el modal
 
   useEffect(() => {
     // Cargar instructores y ambientes desde la API
@@ -30,6 +31,10 @@ export function HorariosTemplate() {
 
         const roomsResponse = await axiosCliente.get('/ambientes');
         setRooms(roomsResponse.data.datos);
+        
+        // Obtener la lista de horarios
+        const scheduleResponse = await axiosCliente.get('/horarios');
+        setSchedule(scheduleResponse.data.datos);
       } catch (error) {
         setError('Error al cargar los datos iniciales.');
       }
@@ -97,6 +102,7 @@ export function HorariosTemplate() {
       }
 
       setError('');
+      setIsModalOpen(false); // Cerrar el modal después de añadir o actualizar
     } catch (error) {
       setError('Error al agregar o actualizar el horario.');
     }
@@ -123,46 +129,57 @@ export function HorariosTemplate() {
     setSelectedEndDate(item.end_date);
     setCalculatedHours(item.hours); // Establecer horas calculadas
     setEditIndex(index);
+    setIsModalOpen(true); // Abrir el modal para editar
   };
 
   return (
     <Container>
       <Title>Administración de Horarios</Title>
-      <Form>
-        <Select onChange={(e) => setSelectedInstructor(e.target.value)} value={selectedInstructor}>
-          <option value="">Seleccionar Instructor</option>
-          {instructors.map((instructor) => (
-            <option key={instructor.id} value={instructor.id}>
-              {instructor.nombres}
-            </option>
-          ))}
-        </Select>
-        <Select onChange={(e) => setSelectedRoom(e.target.value)} value={selectedRoom}>
-          <option value="">Seleccionar Ambiente</option>
-          {rooms.map((room) => (
-            <option key={room.id} value={room.id}>
-              {room.nombre_amb}
-            </option>
-          ))}
-        </Select>
-        <Select onChange={(e) => setSelectedDay(e.target.value)} value={selectedDay}>
-          <option value="">Seleccionar Día</option>
-          {daysOfWeek.map((day, index) => (
-            <option key={index} value={day}>
-              {day}
-            </option>
-          ))}
-        </Select>
-        <Input type="date" onChange={(e) => setSelectedStartDate(e.target.value)} value={selectedStartDate} />
-        <Input type="time" onChange={(e) => setSelectedStartTime(e.target.value)} value={selectedStartTime} />
-        <Input type="date" onChange={(e) => setSelectedEndDate(e.target.value)} value={selectedEndDate} />
-        <Input type="time" onChange={(e) => setSelectedEndTime(e.target.value)} value={selectedEndTime} />
-        <Input type="text" value={calculatedHours} readOnly placeholder="Cantidad de Horas" /> {/* Mostrar horas calculadas */}
-        <Button onClick={handleAddSchedule}>
-          {editIndex !== null ? "Actualizar Horario" : "Añadir Horario"}
-        </Button>
-        {error && <Error>{error}</Error>}
-      </Form>
+      <Button onClick={() => setIsModalOpen(true)}>
+        Añadir Horario
+      </Button>
+      {isModalOpen && (
+        <Modal>
+          <ModalContent>
+            <CloseButton onClick={() => setIsModalOpen(false)}>×</CloseButton>
+            <Form>
+              <Select onChange={(e) => setSelectedInstructor(e.target.value)} value={selectedInstructor}>
+                <option value="">Seleccionar Instructor</option>
+                {instructors.map((instructor) => (
+                  <option key={instructor.id} value={instructor.id}>
+                    {instructor.nombres}
+                  </option>
+                ))}
+              </Select>
+              <Select onChange={(e) => setSelectedRoom(e.target.value)} value={selectedRoom}>
+                <option value="">Seleccionar Ambiente</option>
+                {rooms.map((room) => (
+                  <option key={room.id} value={room.id}>
+                    {room.nombre_amb}
+                  </option>
+                ))}
+              </Select>
+              <Select onChange={(e) => setSelectedDay(e.target.value)} value={selectedDay}>
+                <option value="">Seleccionar Día</option>
+                {daysOfWeek.map((day, index) => (
+                  <option key={index} value={day}>
+                    {day}
+                  </option>
+                ))}
+              </Select>
+              <Input type="date" onChange={(e) => setSelectedStartDate(e.target.value)} value={selectedStartDate} />
+              <Input type="time" onChange={(e) => setSelectedStartTime(e.target.value)} value={selectedStartTime} />
+              <Input type="date" onChange={(e) => setSelectedEndDate(e.target.value)} value={selectedEndDate} />
+              <Input type="time" onChange={(e) => setSelectedEndTime(e.target.value)} value={selectedEndTime} />
+              <Input type="text" value={calculatedHours} readOnly placeholder="Cantidad de Horas" /> {/* Mostrar horas calculadas */}
+              <Button onClick={handleAddSchedule}>
+                {editIndex !== null ? "Actualizar Horario" : "Añadir Horario"}
+              </Button>
+              {error && <Error>{error}</Error>}
+            </Form>
+          </ModalContent>
+        </Modal>
+      )}
       <ScheduleTable>
         <TableHeader>
           <TableRow>
@@ -179,7 +196,7 @@ export function HorariosTemplate() {
         <TableBody>
           {schedule.map((item, index) => (
             <TableRow key={index}>
-              <TableCell>{instructors.find(instructor => instructor.id === item.instructor)?.nombres}</TableCell>
+              <TableCell>{instructors.find(instructor => instructor.id === item.personas)?.nombres}</TableCell>
               <TableCell>{rooms.find(room => room.id === item.room)?.nombre_amb}</TableCell>
               <TableCell>{item.start_date}</TableCell>
               <TableCell>{item.start_time}</TableCell>
@@ -189,10 +206,10 @@ export function HorariosTemplate() {
               <TableCell>
                 <ButtonContainer>
                   <ActionButton onClick={() => handleRemoveSchedule(index)}>
-                    <FontAwesomeIcon icon={faTrashAlt} />
+                    🗑️
                   </ActionButton>
                   <UpdateButton onClick={() => handleEditSchedule(index)}>
-                    <FontAwesomeIcon icon={faEdit} />
+                    ✏️
                   </UpdateButton>
                 </ButtonContainer>
               </TableCell>
@@ -271,6 +288,38 @@ const Button = styled.button`
     transform: scale(1.05);
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
   }
+`;
+
+const Modal = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+`;
+
+const ModalContent = styled.div`
+  background: ${({ theme }) => theme.formBg};
+  padding: 20px;
+  border-radius: 8px;
+  width: 100%;
+  max-width: 500px;
+  position: relative;
+`;
+
+const CloseButton = styled.button`
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: transparent;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
 `;
 
 const ScheduleTable = styled.table`
